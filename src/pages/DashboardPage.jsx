@@ -11,9 +11,9 @@ import { db } from "../firebase";
 import { useAuth } from "../utils/auth";
 
 const TIER_STYLES = {
-    certified: { color: "#22c55e", bg: "rgba(34,197,94,0.1)", label: "Certified" },
-    reviewed: { color: "#eab308", bg: "rgba(234,179,8,0.1)", label: "Reviewed" },
-    failed: { color: "#ef4444", bg: "rgba(239,68,68,0.1)", label: "Failed" },
+    certified: { color: "rgb(0,150,100)", bg: "rgba(0,150,100,0.08)", label: "Certified" },
+    reviewed: { color: "rgb(230,170,30)", bg: "rgba(230,170,30,0.08)", label: "Reviewed" },
+    failed: { color: "rgb(255,60,60)", bg: "rgba(255,60,60,0.08)", label: "Failed" },
 };
 
 export default function DashboardPage() {
@@ -44,19 +44,34 @@ export default function DashboardPage() {
     }, [user]);
 
     return (
-        <div className="min-h-screen pt-16">
-            <div className="px-6 py-12" style={{ maxWidth: "64rem", margin: "0 auto" }}>
+        <div style={{ minHeight: "100vh", paddingTop: "3.5rem" }}>
+            <div style={{ maxWidth: "64rem", margin: "0 auto", padding: "3rem 1.5rem" }}>
                 {/* Header */}
-                <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+                <div style={{
+                    display: "flex", flexWrap: "wrap", alignItems: "center",
+                    justifyContent: "space-between", gap: "1rem", marginBottom: "2rem",
+                }}>
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <h1 style={{
+                            fontSize: "1.5rem", fontWeight: 800, marginBottom: "0.25rem",
+                        }}>Dashboard</h1>
+                        <p style={{
+                            fontSize: "0.8rem", fontWeight: 500, color: "var(--color-text-secondary)",
+                        }}>
                             Your scan history and certification results.
                         </p>
                     </div>
                     <Link
                         to="/scan"
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 no-underline transition-all hover:shadow-emerald-500/30 hover:brightness-110"
+                        className="hover-glow"
+                        style={{
+                            display: "inline-flex", alignItems: "center", gap: "0.375rem",
+                            borderRadius: "0.5rem", padding: "0.625rem 1.25rem",
+                            background: "linear-gradient(135deg, var(--color-cta-start), var(--color-cta-end))",
+                            fontSize: "0.8rem", fontWeight: 700, color: "#fff",
+                            textDecoration: "none",
+                            boxShadow: "0 2px 12px var(--color-cta-glow)",
+                        }}
                     >
                         + New Scan
                     </Link>
@@ -64,37 +79,64 @@ export default function DashboardPage() {
 
                 {/* Loading */}
                 {loading && (
-                    <div className="flex items-center justify-center py-20">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-700 border-t-emerald-400" />
+                    <div style={{
+                        display: "flex", alignItems: "center", justifyContent: "center", padding: "5rem 0",
+                    }}>
+                        <div style={{
+                            width: "2rem", height: "2rem", borderRadius: "50%",
+                            border: "2px solid var(--color-border)",
+                            borderTopColor: "var(--color-cta-end)",
+                            animation: "spin 1s linear infinite",
+                        }} />
+                        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
                     </div>
                 )}
 
                 {/* Empty state */}
                 {!loading && scans.length === 0 && (
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 py-20 text-center">
-                        <span className="text-4xl">📭</span>
-                        <p className="mt-3 text-slate-400">No scans yet.</p>
-                        <Link
-                            to="/scan"
-                            className="mt-4 inline-block text-sm font-medium text-emerald-400 no-underline hover:underline"
-                        >
-                            Run your first scan →
+                    <div style={{
+                        borderRadius: "0.75rem", border: "1px solid var(--color-border)",
+                        backgroundColor: "var(--color-surface)", padding: "5rem 0",
+                        textAlign: "center",
+                    }}>
+                        <p style={{
+                            fontSize: "1rem", fontWeight: 700, color: "var(--color-text-primary)",
+                            marginBottom: "0.25rem",
+                        }}>No scans yet</p>
+                        <p style={{
+                            fontSize: "0.8rem", fontWeight: 500, color: "var(--color-text-secondary)",
+                        }}>Run your first security scan to get started.</p>
+                        <Link to="/scan" className="hover-link" style={{
+                            display: "inline-block", marginTop: "1rem", fontSize: "0.8rem",
+                            fontWeight: 700, color: "var(--color-cta-end)", textDecoration: "none",
+                        }}>
+                            Start a scan →
                         </Link>
                     </div>
                 )}
 
                 {/* Scan table */}
                 {!loading && scans.length > 0 && (
-                    <div className="overflow-hidden rounded-xl border border-slate-800">
-                        <table className="w-full text-left text-sm">
+                    <div style={{
+                        overflow: "hidden", borderRadius: "0.75rem",
+                        border: "1px solid var(--color-border)",
+                    }}>
+                        <table style={{
+                            width: "100%", textAlign: "left", fontSize: "0.8rem",
+                            borderCollapse: "collapse",
+                        }}>
                             <thead>
-                                <tr className="border-b border-slate-800 bg-slate-900/50">
-                                    <th className="px-5 py-3 font-medium text-slate-400">Repository</th>
-                                    <th className="px-5 py-3 font-medium text-slate-400">Score</th>
-                                    <th className="px-5 py-3 font-medium text-slate-400">Tier</th>
-                                    <th className="px-5 py-3 font-medium text-slate-400">Date</th>
-                                    <th className="px-5 py-3 font-medium text-slate-400">Status</th>
-                                    <th className="px-5 py-3" />
+                                <tr style={{
+                                    borderBottom: "1px solid var(--color-border)",
+                                    backgroundColor: "var(--color-surface)",
+                                }}>
+                                    {["Repository", "Score", "Tier", "Date", "Status", ""].map((h) => (
+                                        <th key={h} style={{
+                                            padding: "0.75rem 1.25rem", fontWeight: 700,
+                                            color: "var(--color-text-muted)", fontSize: "0.7rem",
+                                            textTransform: "uppercase", letterSpacing: "0.04em",
+                                        }}>{h}</th>
+                                    ))}
                                 </tr>
                             </thead>
                             <tbody>
@@ -111,44 +153,62 @@ export default function DashboardPage() {
                                     return (
                                         <tr
                                             key={scan.id}
-                                            className="border-b border-slate-800/50 transition-colors hover:bg-slate-900/50"
+                                            className="hover-row"
+                                            style={{
+                                                borderBottom: "1px solid var(--color-border)",
+                                            }}
                                         >
-                                            <td className="px-5 py-4">
-                                                <span className="font-medium text-white">
+                                            <td style={{ padding: "0.875rem 1.25rem" }}>
+                                                <span style={{
+                                                    fontWeight: 700, color: "var(--color-text-primary)",
+                                                }}>
                                                     {scan.repoOwner}/{scan.repoName}
                                                 </span>
                                             </td>
-                                            <td className="px-5 py-4">
-                                                <span className="font-mono font-bold text-white">
+                                            <td style={{ padding: "0.875rem 1.25rem" }}>
+                                                <span style={{
+                                                    fontFamily: "var(--font-mono)", fontWeight: 800,
+                                                    color: "var(--color-text-primary)",
+                                                }}>
                                                     {scan.overallScore ?? "—"}
                                                 </span>
                                             </td>
-                                            <td className="px-5 py-4">
-                                                <span
-                                                    className="rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider"
-                                                    style={{ color: tier.color, backgroundColor: tier.bg }}
-                                                >
+                                            <td style={{ padding: "0.875rem 1.25rem" }}>
+                                                <span style={{
+                                                    borderRadius: "9999px", padding: "0.15rem 0.5rem",
+                                                    fontSize: "0.6rem", fontWeight: 800,
+                                                    textTransform: "uppercase", letterSpacing: "0.05em",
+                                                    color: tier.color, backgroundColor: tier.bg,
+                                                }}>
                                                     {tier.label}
                                                 </span>
                                             </td>
-                                            <td className="px-5 py-4 text-slate-500">{date}</td>
-                                            <td className="px-5 py-4">
-                                                <span
-                                                    className={`text-xs font-medium ${scan.status === "complete"
-                                                        ? "text-emerald-400"
+                                            <td style={{
+                                                padding: "0.875rem 1.25rem", fontWeight: 500,
+                                                color: "var(--color-text-muted)",
+                                            }}>{date}</td>
+                                            <td style={{ padding: "0.875rem 1.25rem" }}>
+                                                <span style={{
+                                                    fontSize: "0.75rem", fontWeight: 700,
+                                                    color: scan.status === "complete"
+                                                        ? "var(--color-safe)"
                                                         : scan.status === "error"
-                                                            ? "text-red-400"
-                                                            : "text-amber-400"
-                                                        }`}
-                                                >
+                                                            ? "var(--color-danger)"
+                                                            : "var(--color-warn)",
+                                                }}>
                                                     {scan.status || "—"}
                                                 </span>
                                             </td>
-                                            <td className="px-5 py-4 text-right">
+                                            <td style={{ padding: "0.875rem 1.25rem", textAlign: "right" }}>
                                                 {scan.status === "complete" && (
                                                     <Link
                                                         to={`/report/${scan.id}`}
-                                                        className="text-sm font-medium text-emerald-400 no-underline hover:underline"
+                                                        className="hover-link"
+                                                        style={{
+                                                            fontSize: "0.75rem", fontWeight: 700,
+                                                            color: "var(--color-cta-end)",
+                                                            textDecoration: "none",
+                                                        }}
                                                     >
                                                         View Report →
                                                     </Link>

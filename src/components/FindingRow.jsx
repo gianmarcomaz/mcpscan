@@ -1,56 +1,88 @@
 const SEVERITY_STYLES = {
-    critical: { label: "CRITICAL", color: "#ef4444", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.15)", dot: "bg-red-500" },
-    high: { label: "HIGH", color: "#f97316", bg: "rgba(249,115,22,0.08)", border: "rgba(249,115,22,0.15)", dot: "bg-orange-500" },
-    medium: { label: "MEDIUM", color: "#eab308", bg: "rgba(234,179,8,0.08)", border: "rgba(234,179,8,0.15)", dot: "bg-yellow-500" },
-    low: { label: "LOW", color: "#3b82f6", bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.15)", dot: "bg-blue-500" },
-    info: { label: "INFO", color: "#64748b", bg: "rgba(100,116,139,0.08)", border: "rgba(100,116,139,0.15)", dot: "bg-slate-500" },
+    critical: {
+        label: "CRITICAL", color: "rgb(255,60,60)",
+        bg: "rgba(255,60,60,0.06)", border: "rgba(255,60,60,0.12)",
+    },
+    high: {
+        label: "HIGH", color: "rgb(255,120,60)",
+        bg: "rgba(255,120,60,0.06)", border: "rgba(255,120,60,0.12)",
+    },
+    medium: {
+        label: "MEDIUM", color: "rgb(230,170,30)",
+        bg: "rgba(230,170,30,0.06)", border: "rgba(230,170,30,0.12)",
+    },
+    low: {
+        label: "LOW", color: "rgb(0,160,220)",
+        bg: "rgba(0,160,220,0.06)", border: "rgba(0,160,220,0.12)",
+    },
+    info: {
+        label: "INFO", color: "rgba(255,255,255,0.35)",
+        bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.06)",
+    },
 };
 
 /**
  * A single finding row with severity, file, line, snippet, message, and remediation.
- * Props: finding ({ severity, file, line, snippet, message, remediation })
  */
 export default function FindingRow({ finding }) {
     const s = SEVERITY_STYLES[finding.severity] || SEVERITY_STYLES.info;
 
     return (
-        <div
-            className="overflow-hidden rounded-lg"
-            style={{
-                backgroundColor: s.bg,
-                border: `1px solid ${s.border}`,
-            }}
-        >
+        <div style={{
+            overflow: "hidden", borderRadius: "0.5rem",
+            backgroundColor: s.bg, border: `1px solid ${s.border}`,
+        }}>
             {/* Header */}
-            <div className="flex flex-wrap items-center gap-2 px-4 pt-3 pb-2">
+            <div style={{
+                display: "flex", flexWrap: "wrap", alignItems: "center",
+                gap: "0.5rem", padding: "0.75rem 1rem 0.5rem",
+            }}>
                 {/* Severity badge */}
-                <span
-                    className="inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-                    style={{ color: s.color, backgroundColor: "rgba(0,0,0,0.2)" }}
-                >
-                    <span className={`inline-block h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                <span style={{
+                    display: "inline-flex", alignItems: "center", gap: "0.375rem",
+                    borderRadius: "0.25rem", padding: "0.125rem 0.5rem",
+                    fontSize: "0.6rem", fontWeight: 800, letterSpacing: "0.05em",
+                    color: s.color, backgroundColor: "rgba(0,0,0,0.2)",
+                    fontFamily: "var(--font-mono)",
+                }}>
+                    <span style={{
+                        display: "inline-block", width: "4px", height: "4px",
+                        borderRadius: "50%", backgroundColor: s.color,
+                    }} />
                     {s.label}
                 </span>
                 {/* File path */}
-                <span className="font-mono text-xs text-slate-400">
+                <span style={{
+                    fontFamily: "var(--font-mono)", fontSize: "0.7rem", fontWeight: 500,
+                    color: "var(--color-text-secondary)",
+                }}>
                     {finding.file}
                     {finding.line != null && (
-                        <span className="text-slate-600">:{finding.line}</span>
+                        <span style={{ color: "var(--color-text-muted)" }}>:{finding.line}</span>
                     )}
                 </span>
             </div>
 
             {/* Message */}
-            <div className="px-4 pb-3">
-                <p className="text-sm leading-relaxed text-slate-300">
+            <div style={{ padding: "0 1rem 0.75rem" }}>
+                <p style={{
+                    fontSize: "0.8rem", fontWeight: 500, lineHeight: 1.6,
+                    color: "var(--color-text-secondary)", margin: 0,
+                }}>
                     {finding.message}
                 </p>
             </div>
 
             {/* Code snippet */}
             {finding.snippet && (
-                <div className="mx-3 mb-3">
-                    <pre className="overflow-x-auto rounded-md bg-black/30 p-3 font-mono text-xs leading-5 text-emerald-400/90">
+                <div style={{ margin: "0 0.75rem 0.75rem" }}>
+                    <pre style={{
+                        overflowX: "auto", borderRadius: "0.375rem",
+                        backgroundColor: "rgba(0,0,0,0.3)", padding: "0.75rem",
+                        fontFamily: "var(--font-mono)", fontSize: "0.7rem", fontWeight: 500,
+                        lineHeight: 1.7, color: "var(--color-cta-end)",
+                        margin: 0,
+                    }}>
                         {finding.snippet}
                     </pre>
                 </div>
@@ -58,14 +90,26 @@ export default function FindingRow({ finding }) {
 
             {/* Remediation */}
             {finding.remediation && (
-                <div className="mx-3 mb-3 rounded-md bg-black/20 px-3 py-2.5">
-                    <div className="flex items-center gap-1.5 mb-1">
-                        <span className="text-xs">💡</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+                <div style={{
+                    margin: "0 0.75rem 0.75rem", borderRadius: "0.375rem",
+                    backgroundColor: "rgba(0,0,0,0.15)", padding: "0.75rem",
+                }}>
+                    <div style={{
+                        display: "flex", alignItems: "center", gap: "0.375rem",
+                        marginBottom: "0.25rem",
+                    }}>
+                        <span style={{
+                            fontSize: "0.55rem", fontWeight: 800,
+                            textTransform: "uppercase", letterSpacing: "0.05em",
+                            color: "var(--color-cta-end)",
+                        }}>
                             How to fix
                         </span>
                     </div>
-                    <p className="text-xs leading-relaxed text-slate-400">
+                    <p style={{
+                        fontSize: "0.7rem", fontWeight: 500, lineHeight: 1.6,
+                        color: "var(--color-text-secondary)", margin: 0,
+                    }}>
                         {finding.remediation}
                     </p>
                 </div>

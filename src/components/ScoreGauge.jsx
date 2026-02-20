@@ -2,21 +2,21 @@ import { useEffect, useState } from "react";
 
 /**
  * Animated circular SVG gauge displaying 0–100 score.
- * Clean, minimal design — no filters or effects that cause clipping.
+ * Uses safe/warn/danger colors from enterprise palette.
  */
 export default function ScoreGauge({ score = 0, size = 160 }) {
     const [animatedScore, setAnimatedScore] = useState(0);
-    const strokeWidth = 10;
+    const strokeWidth = 8;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (animatedScore / 100) * circumference;
 
     const tier =
         score >= 90
-            ? { label: "Certified", color: "#22c55e" }
+            ? { label: "Certified", color: "rgb(0,150,100)" }
             : score >= 70
-                ? { label: "Reviewed", color: "#eab308" }
-                : { label: "Failed", color: "#ef4444" };
+                ? { label: "Reviewed", color: "rgb(230,170,30)" }
+                : { label: "Failed", color: "rgb(255,60,60)" };
 
     useEffect(() => {
         const duration = 1200;
@@ -32,13 +32,13 @@ export default function ScoreGauge({ score = 0, size = 160 }) {
     }, [score]);
 
     return (
-        <div className="flex flex-col items-center gap-2">
-            <div className="relative" style={{ width: size, height: size }}>
-                <svg width={size} height={size} className="-rotate-90">
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.625rem" }}>
+            <div style={{ position: "relative", width: size, height: size }}>
+                <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
                     {/* Track */}
                     <circle
                         cx={size / 2} cy={size / 2} r={radius}
-                        fill="none" stroke="#1e293b" strokeWidth={strokeWidth}
+                        fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={strokeWidth}
                     />
                     {/* Score arc */}
                     <circle
@@ -50,20 +50,30 @@ export default function ScoreGauge({ score = 0, size = 160 }) {
                     />
                 </svg>
                 {/* Center label */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-4xl font-black tabular-nums" style={{ color: tier.color }}>
+                <div style={{
+                    position: "absolute", inset: 0,
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center",
+                }}>
+                    <span style={{
+                        fontSize: "2.25rem", fontWeight: 800,
+                        fontVariantNumeric: "tabular-nums",
+                        color: tier.color,
+                    }}>
                         {animatedScore}
                     </span>
-                    <span className="text-[11px] text-slate-500">/ 100</span>
+                    <span style={{
+                        fontSize: "0.65rem", color: "var(--color-text-muted)",
+                    }}>/ 100</span>
                 </div>
             </div>
-            <span
-                className="rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest"
-                style={{
-                    color: tier.color,
-                    backgroundColor: tier.color + "18",
-                }}
-            >
+            <span style={{
+                borderRadius: "9999px", padding: "0.25rem 0.75rem",
+                fontSize: "0.6rem", fontWeight: 700,
+                textTransform: "uppercase", letterSpacing: "0.08em",
+                color: tier.color,
+                backgroundColor: tier.color.replace("rgb", "rgba").replace(")", ",0.1)"),
+            }}>
                 {tier.label}
             </span>
         </div>

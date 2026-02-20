@@ -12,14 +12,9 @@ const STEP_LABELS = [
     { key: "specCompliance", label: "Validating spec compliance…" },
     { key: "inputValidation", label: "Assessing input validation…" },
     { key: "scoring", label: "Calculating score…" },
-    { key: "complete", label: "Scan complete!" },
+    { key: "complete", label: "Scan complete" },
 ];
 
-/**
- * Real-time scan progress display.
- * Listens to a Firestore scan document and shows step-by-step progress.
- * Props: scanId (string), onComplete (function called when scan finishes)
- */
 export default function ScanProgress({ scanId, onComplete }) {
     const [scanData, setScanData] = useState(null);
     const [error, setError] = useState(null);
@@ -52,54 +47,83 @@ export default function ScanProgress({ scanId, onComplete }) {
 
     if (error) {
         return (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center">
-                <span className="text-3xl">❌</span>
-                <p className="mt-2 text-sm font-medium text-red-400">{error}</p>
+            <div style={{
+                borderRadius: "0.5rem", border: "1px solid rgba(255,60,60,0.2)",
+                backgroundColor: "rgba(255,60,60,0.04)", padding: "1.5rem",
+                textAlign: "center",
+            }}>
+                <p style={{
+                    fontSize: "0.8rem", fontWeight: 600, color: "var(--color-danger)",
+                }}>{error}</p>
             </div>
         );
     }
 
     return (
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-            <h3 className="mb-5 text-sm font-semibold text-white">
+        <div style={{
+            borderRadius: "0.75rem", border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-surface)", padding: "1.5rem",
+        }}>
+            <h3 style={{
+                fontSize: "0.8rem", fontWeight: 700,
+                color: "var(--color-text-primary)", marginBottom: "1.25rem",
+            }}>
                 Scan Progress
             </h3>
 
-            <div className="space-y-3">
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
                 {STEP_LABELS.map((step, i) => {
                     const isDone = i < currentIndex;
                     const isCurrent = i === currentIndex;
-                    const isPending = i > currentIndex;
 
                     return (
-                        <div key={step.key} className="flex items-center gap-3">
+                        <div key={step.key} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                             {/* Status indicator */}
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+                            <div style={{
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                width: "1.25rem", height: "1.25rem", flexShrink: 0,
+                            }}>
                                 {isDone && (
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 text-xs text-emerald-400">
+                                    <span style={{
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        width: "1.25rem", height: "1.25rem", borderRadius: "50%",
+                                        backgroundColor: "rgba(0,150,100,0.12)",
+                                        fontSize: "0.6rem", fontWeight: 800, color: "var(--color-safe)",
+                                    }}>
                                         ✓
                                     </span>
                                 )}
                                 {isCurrent && (
-                                    <span className="relative flex h-3 w-3">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                                        <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
+                                    <span style={{ position: "relative", display: "flex", width: "0.5rem", height: "0.5rem" }}>
+                                        <span style={{
+                                            position: "absolute", inset: 0,
+                                            borderRadius: "50%", backgroundColor: "var(--color-cta-end)",
+                                            animation: "pulse-dot 1.5s ease-in-out infinite",
+                                        }} />
+                                        <span style={{
+                                            position: "relative", width: "0.5rem", height: "0.5rem",
+                                            borderRadius: "50%", backgroundColor: "var(--color-cta-end)",
+                                        }} />
                                     </span>
                                 )}
-                                {isPending && (
-                                    <span className="h-2 w-2 rounded-full bg-slate-700" />
+                                {!isDone && !isCurrent && (
+                                    <span style={{
+                                        width: "0.35rem", height: "0.35rem", borderRadius: "50%",
+                                        backgroundColor: "rgba(255,255,255,0.1)",
+                                    }} />
                                 )}
                             </div>
 
                             {/* Label */}
-                            <span
-                                className={`text-sm ${isDone
-                                        ? "text-slate-500"
-                                        : isCurrent
-                                            ? "font-medium text-white"
-                                            : "text-slate-600"
-                                    }`}
-                            >
+                            <span style={{
+                                fontSize: "0.8rem", fontWeight: isCurrent ? 600 : 500,
+                                color: isDone
+                                    ? "var(--color-text-muted)"
+                                    : isCurrent
+                                        ? "var(--color-text-primary)"
+                                        : "rgba(255,255,255,0.15)",
+                                transition: "color 300ms ease",
+                            }}>
                                 {step.label}
                             </span>
                         </div>
@@ -108,13 +132,16 @@ export default function ScanProgress({ scanId, onComplete }) {
             </div>
 
             {/* Progress bar */}
-            <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-slate-800">
-                <div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-700"
-                    style={{
-                        width: `${((currentIndex + 1) / STEP_LABELS.length) * 100}%`,
-                    }}
-                />
+            <div style={{
+                marginTop: "1.25rem", height: "3px", borderRadius: "2px",
+                backgroundColor: "rgba(255,255,255,0.06)", overflow: "hidden",
+            }}>
+                <div style={{
+                    height: "100%", borderRadius: "2px",
+                    background: "linear-gradient(90deg, var(--color-cta-start), var(--color-cta-end))",
+                    transition: "width 700ms cubic-bezier(0.4, 0, 0.2, 1)",
+                    width: `${((currentIndex + 1) / STEP_LABELS.length) * 100}%`,
+                }} />
             </div>
         </div>
     );

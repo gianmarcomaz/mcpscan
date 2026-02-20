@@ -51,8 +51,16 @@ export default function ReportPage() {
     /* Loading */
     if (loading) {
         return (
-            <div className="flex min-h-screen items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-700 border-t-emerald-400" />
+            <div style={{
+                display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center",
+            }}>
+                <div style={{
+                    width: "2.5rem", height: "2.5rem", borderRadius: "50%",
+                    border: "2px solid var(--color-border)",
+                    borderTopColor: "var(--color-cta-end)",
+                    animation: "spin 1s linear infinite",
+                }} />
+                <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
             </div>
         );
     }
@@ -60,28 +68,39 @@ export default function ReportPage() {
     /* Error */
     if (error) {
         return (
-            <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-                <span className="text-4xl">🔍</span>
-                <p className="text-slate-400">{error}</p>
-                <Link to="/" className="text-sm text-emerald-400 no-underline hover:underline">Back to Home</Link>
+            <div style={{
+                display: "flex", minHeight: "100vh", flexDirection: "column",
+                alignItems: "center", justifyContent: "center", gap: "1rem",
+            }}>
+                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>{error}</p>
+                <Link to="/" className="hover-link" style={{
+                    fontSize: "0.8rem", fontWeight: 600, color: "var(--color-cta-end)", textDecoration: "none",
+                }}>Back to Home</Link>
             </div>
         );
     }
 
     /* Scanning in progress */
     if (scan.status !== "complete" && scan.status !== "error") {
-        return <ScanProgress scan={scan} />;
+        return <ScanProgressView scan={scan} />;
     }
 
     /* Scan error */
     if (scan.status === "error") {
         return (
             <PageShell>
-                <div className="text-center py-16">
-                    <span className="text-5xl mb-4 block">⚠️</span>
-                    <h1 className="text-xl font-bold text-white mb-2">Scan Failed</h1>
-                    <p className="text-sm text-slate-400 mb-6">{scan.errorMessage || "Unknown error"}</p>
-                    <Link to="/scan" className="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white no-underline hover:bg-emerald-600">
+                <div style={{ textAlign: "center", padding: "4rem 0" }}>
+                    <h1 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "0.5rem" }}>Scan Failed</h1>
+                    <p style={{
+                        fontSize: "0.8rem", fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: "1.5rem",
+                    }}>{scan.errorMessage || "Unknown error"}</p>
+                    <Link to="/scan" className="hover-glow" style={{
+                        display: "inline-block", borderRadius: "0.5rem",
+                        background: "linear-gradient(135deg, var(--color-cta-start), var(--color-cta-end))",
+                        padding: "0.625rem 1.5rem", fontSize: "0.8rem", fontWeight: 700,
+                        color: "#fff", textDecoration: "none",
+                        boxShadow: "0 4px 16px var(--color-cta-glow)",
+                    }}>
                         Try Again
                     </Link>
                 </div>
@@ -96,8 +115,8 @@ export default function ReportPage() {
 /* ─── Page wrapper ─── */
 function PageShell({ children }) {
     return (
-        <div style={{ paddingTop: "6rem" }}>
-            <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "0 1.25rem 3rem" }}>
+        <div style={{ paddingTop: "5.5rem" }}>
+            <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "0 1.5rem 3rem" }}>
                 {children}
             </div>
         </div>
@@ -105,29 +124,40 @@ function PageShell({ children }) {
 }
 
 /* ─── Progress view ─── */
-function ScanProgress({ scan }) {
+function ScanProgressView({ scan }) {
     const keys = Object.keys(STEP_LABELS);
     const stepIndex = keys.indexOf(scan.currentStep || "pending");
     const totalSteps = keys.length - 2;
     const pct = Math.min(Math.max((stepIndex / totalSteps) * 100, 5), 100);
 
     return (
-        <div className="flex min-h-screen items-center justify-center">
-            <div className="w-full max-w-sm px-6 text-center">
-                <div className="mb-5 text-4xl">🔍</div>
-                <h2 className="text-lg font-bold text-white mb-1">
+        <div style={{
+            display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center",
+        }}>
+            <div style={{ width: "100%", maxWidth: "22rem", padding: "0 1.5rem", textAlign: "center" }}>
+                <h2 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "0.375rem" }}>
                     Scanning {scan.repoOwner}/{scan.repoName}
                 </h2>
-                <p className="text-sm text-emerald-400 mb-6">
+                <p style={{
+                    fontSize: "0.8rem", fontWeight: 600, color: "var(--color-cta-end)", marginBottom: "1.5rem",
+                }}>
                     {STEP_LABELS[scan.currentStep] || "Processing…"}
                 </p>
-                <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden mb-2">
-                    <div
-                        className="h-full rounded-full bg-emerald-500 transition-all duration-700"
-                        style={{ width: `${pct}%` }}
-                    />
+                <div style={{
+                    height: "3px", borderRadius: "2px",
+                    backgroundColor: "rgba(255,255,255,0.06)", overflow: "hidden",
+                    marginBottom: "0.5rem",
+                }}>
+                    <div style={{
+                        height: "100%", borderRadius: "2px",
+                        background: "linear-gradient(90deg, var(--color-cta-start), var(--color-cta-end))",
+                        transition: "width 700ms cubic-bezier(0.4, 0, 0.2, 1)",
+                        width: `${pct}%`,
+                    }} />
                 </div>
-                <p className="text-xs text-slate-600">Step {Math.max(stepIndex, 1)} of {totalSteps}</p>
+                <p style={{
+                    fontSize: "0.65rem", fontWeight: 600, color: "var(--color-text-muted)",
+                }}>Step {Math.max(stepIndex, 1)} of {totalSteps}</p>
             </div>
         </div>
     );
@@ -136,9 +166,9 @@ function ScanProgress({ scan }) {
 /* ─── Completed scan report ─── */
 function ScanReport({ scan, scanId }) {
     const tierColor =
-        scan.tier === "certified" ? "#22c55e"
-            : scan.tier === "reviewed" ? "#eab308"
-                : "#ef4444";
+        scan.tier === "certified" ? "rgb(0,150,100)"
+            : scan.tier === "reviewed" ? "rgb(230,170,30)"
+                : "rgb(255,60,60)";
 
     const tierLabel =
         scan.tier === "certified" ? "Certified"
@@ -154,31 +184,40 @@ function ScanReport({ scan, scanId }) {
         : "—";
 
     return (
-        <div style={{ paddingTop: "6rem", width: "100%" }}>
+        <div style={{ paddingTop: "5.5rem", width: "100%" }}>
             <div style={{ maxWidth: "64rem", margin: "0 auto", padding: "0 1.5rem 3rem" }}>
 
                 {/* ══════ HERO ══════ */}
-                <div className="text-center mb-10">
+                <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
                     {/* Score */}
-                    <div className="flex justify-center mb-5">
-                        <ScoreGauge score={scan.overallScore || 0} size={150} />
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
+                        <ScoreGauge score={scan.overallScore || 0} size={140} />
                     </div>
 
                     {/* Repo name */}
-                    <h1 className="text-2xl font-bold text-white mb-2">
+                    <h1 style={{
+                        fontSize: "1.5rem", fontWeight: 800, marginBottom: "0.625rem",
+                    }}>
                         {scan.repoOwner}/{scan.repoName}
                     </h1>
 
                     {/* Tier badge */}
-                    <span
-                        className="inline-block rounded-full px-4 py-1 text-xs font-bold uppercase tracking-wider mb-4"
-                        style={{ color: tierColor, backgroundColor: tierColor + "18" }}
-                    >
+                    <span style={{
+                        display: "inline-block", borderRadius: "9999px",
+                        padding: "0.25rem 0.875rem", fontSize: "0.6rem",
+                        fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em",
+                        color: tierColor,
+                        backgroundColor: tierColor.replace("rgb", "rgba").replace(")", ",0.1)"),
+                        marginBottom: "1rem",
+                    }}>
                         {tierLabel}
                     </span>
 
                     {/* Summary */}
-                    <p className="text-sm text-slate-400 mb-5 leading-relaxed" style={{ maxWidth: "28rem", margin: "0 auto 1.25rem" }}>
+                    <p style={{
+                        fontSize: "0.8rem", fontWeight: 500, color: "var(--color-text-secondary)",
+                        lineHeight: 1.7, maxWidth: "26rem", margin: "0 auto 1.25rem",
+                    }}>
                         {scan.overallScore >= 90
                             ? "All security checks passed. This server meets MCP certification criteria."
                             : scan.overallScore >= 70
@@ -187,12 +226,20 @@ function ScanReport({ scan, scanId }) {
                     </p>
 
                     {/* Stats row */}
-                    <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+                    <div style={{
+                        display: "flex", flexWrap: "wrap", alignItems: "center",
+                        justifyContent: "center", gap: "0.5rem",
+                    }}>
                         <Pill>{scanDate}</Pill>
                         <Pill>{passedChecks}/{CHECK_ORDER.length} passed</Pill>
                         <Pill>{totalFindings} finding{totalFindings !== 1 ? "s" : ""}</Pill>
                         {criticalCount > 0 && (
-                            <span className="rounded-full bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-400">
+                            <span style={{
+                                borderRadius: "9999px", padding: "0.25rem 0.625rem",
+                                fontSize: "0.7rem", fontWeight: 800,
+                                color: "var(--color-danger)",
+                                backgroundColor: "rgba(255,60,60,0.08)",
+                            }}>
                                 {criticalCount} critical
                             </span>
                         )}
@@ -200,28 +247,89 @@ function ScanReport({ scan, scanId }) {
                 </div>
 
                 {/* Divider */}
-                <div className="h-px bg-slate-800 mb-6" />
+                <div style={{ height: "1px", backgroundColor: "var(--color-border)", marginBottom: "1.5rem" }} />
 
-                {/* ══════ CHECK CARDS ══════ */}
-                <h2 style={{ fontSize: "0.75rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem" }}>
+                {/* ══════ CHECK CARDS + SCORING LEGEND ══════ */}
+                <h2 style={{
+                    fontSize: "0.7rem", fontWeight: 800, color: "var(--color-text-muted)",
+                    textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "1rem",
+                }}>
                     Security Checks
                 </h2>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem", marginBottom: "2.5rem" }}>
-                    {CHECK_ORDER.map(key => (
-                        <CheckCard
-                            key={key}
-                            checkName={key}
-                            data={scan.checks?.[key] || { score: 0, status: "info", findings: [] }}
-                        />
-                    ))}
+                <div style={{
+                    display: "flex", gap: "1.25rem", alignItems: "flex-start",
+                    marginBottom: "2.5rem",
+                }}>
+                    {/* Left: Check cards grid */}
+                    <div style={{
+                        display: "grid", gridTemplateColumns: "repeat(2, 1fr)",
+                        gap: "0.75rem", flex: 1, minWidth: 0,
+                    }}>
+                        {CHECK_ORDER.map(key => (
+                            <CheckCard
+                                key={key}
+                                checkName={key}
+                                data={scan.checks?.[key] || { score: 0, status: "info", findings: [] }}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Right: Scoring Legend */}
+                    <div className="hover-card" style={{
+                        width: "12rem", flexShrink: 0, borderRadius: "0.625rem",
+                        border: "1px solid var(--color-border)",
+                        backgroundColor: "var(--color-surface)", padding: "1rem",
+                    }}>
+                        <div style={{
+                            fontSize: "0.6rem", fontWeight: 800, color: "var(--color-text-muted)",
+                            textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.75rem",
+                        }}>
+                            How Scores Work
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                            {[
+                                { score: "100", issues: "0 issues", color: "rgb(0,150,100)", icon: "✓" },
+                                { score: "80–99", issues: "1–2 issues", color: "rgb(0,150,100)", icon: "✓" },
+                                { score: "60–79", issues: "3–5 issues", color: "rgb(230,170,30)", icon: "!" },
+                                { score: "40–59", issues: "6–8 issues", color: "rgb(255,60,60)", icon: "✗" },
+                                { score: "0–39", issues: "9+ issues", color: "rgb(255,60,60)", icon: "✗" },
+                            ].map((t) => (
+                                <div key={t.score} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                                    <span style={{
+                                        fontFamily: "var(--font-mono)", fontSize: "0.65rem",
+                                        fontWeight: 800, color: t.color, width: "2.25rem", textAlign: "right",
+                                    }}>
+                                        {t.score}
+                                    </span>
+                                    <span style={{ fontSize: "0.55rem", fontWeight: 600, color: "var(--color-text-muted)" }}>→</span>
+                                    <span style={{ fontSize: "0.6rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>{t.issues}</span>
+                                    <span style={{ fontSize: "0.55rem", fontWeight: 800, color: t.color, marginLeft: "auto" }}>{t.icon}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{
+                            marginTop: "0.625rem", paddingTop: "0.5rem",
+                            borderTop: "1px solid var(--color-border)",
+                        }}>
+                            <p style={{
+                                fontSize: "0.55rem", fontWeight: 500, color: "var(--color-text-muted)",
+                                lineHeight: 1.5, margin: 0,
+                            }}>
+                                Scores reflect the number and severity of findings. Critical issues have a higher impact on the score.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* ══════ BADGE ══════ */}
                 {scan.overallScore >= 70 && (
                     <>
-                        <div className="h-px bg-slate-800 mb-6" />
-                        <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">
+                        <div style={{ height: "1px", backgroundColor: "var(--color-border)", marginBottom: "1.5rem" }} />
+                        <h2 style={{
+                            fontSize: "0.7rem", fontWeight: 800, color: "var(--color-text-muted)",
+                            textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "1rem",
+                        }}>
                             Badge
                         </h2>
                         <div style={{ maxWidth: "28rem", margin: "0 auto 2.5rem" }}>
@@ -236,11 +344,18 @@ function ScanReport({ scan, scanId }) {
                 )}
 
                 {/* ══════ FOOTER NAV ══════ */}
-                <div className="flex items-center justify-between pt-6 border-t border-slate-800">
-                    <Link to="/dashboard" className="text-sm text-slate-500 no-underline hover:text-emerald-400 transition-colors">
+                <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    paddingTop: "1.5rem", borderTop: "1px solid var(--color-border)",
+                }}>
+                    <Link to="/dashboard" className="hover-link" style={{
+                        fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)", textDecoration: "none",
+                    }}>
                         ← Dashboard
                     </Link>
-                    <Link to="/scan" className="text-sm text-slate-500 no-underline hover:text-emerald-400 transition-colors">
+                    <Link to="/scan" className="hover-link" style={{
+                        fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)", textDecoration: "none",
+                    }}>
                         Scan Another →
                     </Link>
                 </div>
@@ -251,7 +366,12 @@ function ScanReport({ scan, scanId }) {
 
 function Pill({ children }) {
     return (
-        <span className="rounded-full bg-slate-800 px-3 py-1.5 text-slate-400">
+        <span style={{
+            borderRadius: "9999px", padding: "0.25rem 0.625rem",
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            fontSize: "0.7rem", fontWeight: 600, color: "var(--color-text-secondary)",
+        }}>
             {children}
         </span>
     );

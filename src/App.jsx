@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./utils/auth";
 import Navbar from "./components/Navbar";
 import LandingPage from "./pages/LandingPage";
 import ScanPage from "./pages/ScanPage";
 import ReportPage from "./pages/ReportPage";
 import DashboardPage from "./pages/DashboardPage";
+import DemoHeroPage from "./pages/DemoHeroPage";
 
 function ProtectedRoute({ children }) {
     const { user, loading } = useAuth();
@@ -24,10 +25,13 @@ function ProtectedRoute({ children }) {
     return children;
 }
 
-export default function App() {
+function AppLayout() {
+    const location = useLocation();
+    const hideNavbar = location.pathname === "/demo";
+
     return (
-        <BrowserRouter>
-            <Navbar />
+        <>
+            {!hideNavbar && <Navbar />}
             <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route
@@ -47,8 +51,17 @@ export default function App() {
                         </ProtectedRoute>
                     }
                 />
+                <Route path="/demo" element={<DemoHeroPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+        </>
+    );
+}
+
+export default function App() {
+    return (
+        <BrowserRouter>
+            <AppLayout />
         </BrowserRouter>
     );
 }
