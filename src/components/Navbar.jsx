@@ -4,6 +4,7 @@ import { useAuth } from "../utils/auth";
 const NAV_LINKS = [
     { to: "/", label: "Home" },
     { to: "/scan", label: "Scan", auth: true },
+    { to: "/local-scan", label: "Local Scan" },
     { to: "/dashboard", label: "Dashboard", auth: true },
 ];
 

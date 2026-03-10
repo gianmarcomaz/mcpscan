@@ -43,34 +43,21 @@ export default function CheckCard({ checkName, data }) {
     const findings = data?.findings || [];
     const issueCount = findings.length;
 
-    // ── Derive displayed score from issue count ──
-    let displayScore;
-    if (issueCount === 0) {
-        displayScore = 100;
-    } else if (issueCount <= 2) {
-        displayScore = 100 - issueCount * 10 + 5;
-    } else if (issueCount <= 5) {
-        displayScore = 80 - (issueCount - 2) * 5;
-    } else if (issueCount <= 8) {
-        displayScore = 60 - (issueCount - 5) * 5;
-    } else {
-        displayScore = Math.max(0, 40 - (issueCount - 8) * 5);
-    }
+    // ── Use the REAL backend score and status ──
+    const backendScore = data?.score ?? 0;
+    const backendStatus = data?.status || "info";
 
-    // ── Status + color derived from displayScore ──
-    let displayStatus, scoreColor;
-    if (displayScore >= 80) {
-        displayStatus = "pass";
+    // Color derived from backend score
+    let scoreColor;
+    if (backendScore >= 80) {
         scoreColor = "rgb(0,150,100)";
-    } else if (displayScore >= 60) {
-        displayStatus = "warn";
+    } else if (backendScore >= 50) {
         scoreColor = "rgb(230,170,30)";
     } else {
-        displayStatus = "fail";
         scoreColor = "rgb(255,60,60)";
     }
 
-    const style = STATUS_CONFIG[displayStatus] || STATUS_CONFIG.info;
+    const style = STATUS_CONFIG[backendStatus] || STATUS_CONFIG.info;
 
     return (
         <div className="hover-card" style={{
@@ -124,7 +111,7 @@ export default function CheckCard({ checkName, data }) {
                         backgroundColor: "rgba(255,255,255,0.04)", overflow: "hidden",
                     }}>
                         <div style={{
-                            width: `${displayScore}%`, height: "100%",
+                            width: `${backendScore}%`, height: "100%",
                             borderRadius: "2px", backgroundColor: scoreColor,
                             transition: "width 300ms ease",
                         }} />
@@ -136,7 +123,7 @@ export default function CheckCard({ checkName, data }) {
                         fontWeight: 700, color: scoreColor, width: "1.5rem",
                         textAlign: "right",
                     }}>
-                        {displayScore}
+                        {backendScore}
                     </span>
 
                     {/* Status badge */}

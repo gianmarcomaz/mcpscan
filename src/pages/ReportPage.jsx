@@ -287,36 +287,66 @@ function ScanReport({ scan, scanId }) {
                         }}>
                             How Scores Work
                         </div>
+
+                        {/* Per-check score thresholds */}
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
                             {[
-                                { score: "100", issues: "0 issues", color: "rgb(0,150,100)", icon: "✓" },
-                                { score: "80–99", issues: "1–2 issues", color: "rgb(0,150,100)", icon: "✓" },
-                                { score: "60–79", issues: "3–5 issues", color: "rgb(230,170,30)", icon: "!" },
-                                { score: "40–59", issues: "6–8 issues", color: "rgb(255,60,60)", icon: "✗" },
-                                { score: "0–39", issues: "9+ issues", color: "rgb(255,60,60)", icon: "✗" },
+                                { range: "80–100", label: "Pass", color: "rgb(0,150,100)", icon: "✓" },
+                                { range: "50–79", label: "Warning", color: "rgb(230,170,30)", icon: "!" },
+                                { range: "0–49", label: "Fail", color: "rgb(255,60,60)", icon: "✗" },
                             ].map((t) => (
-                                <div key={t.score} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                                <div key={t.range} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                                     <span style={{
                                         fontFamily: "var(--font-mono)", fontSize: "0.65rem",
                                         fontWeight: 800, color: t.color, width: "2.25rem", textAlign: "right",
                                     }}>
-                                        {t.score}
+                                        {t.range}
                                     </span>
                                     <span style={{ fontSize: "0.55rem", fontWeight: 600, color: "var(--color-text-muted)" }}>→</span>
-                                    <span style={{ fontSize: "0.6rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>{t.issues}</span>
+                                    <span style={{ fontSize: "0.6rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>{t.label}</span>
                                     <span style={{ fontSize: "0.55rem", fontWeight: 800, color: t.color, marginLeft: "auto" }}>{t.icon}</span>
                                 </div>
                             ))}
                         </div>
+
+                        {/* Weight breakdown */}
                         <div style={{
                             marginTop: "0.625rem", paddingTop: "0.5rem",
+                            borderTop: "1px solid var(--color-border)",
+                        }}>
+                            <div style={{
+                                fontSize: "0.55rem", fontWeight: 800, color: "var(--color-text-muted)",
+                                textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.375rem",
+                            }}>Overall Weight</div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                                {[
+                                    { abbr: "NE", weight: "25%" },
+                                    { abbr: "CI", weight: "25%" },
+                                    { abbr: "CL", weight: "20%" },
+                                    { abbr: "TP", weight: "15%" },
+                                    { abbr: "SC", weight: "10%" },
+                                    { abbr: "IV", weight: "5%" },
+                                ].map((w) => (
+                                    <div key={w.abbr} style={{
+                                        display: "flex", justifyContent: "space-between",
+                                        fontSize: "0.6rem", fontWeight: 600,
+                                    }}>
+                                        <span style={{ color: "var(--color-text-secondary)", fontFamily: "var(--font-mono)" }}>{w.abbr}</span>
+                                        <span style={{ color: "var(--color-text-muted)" }}>{w.weight}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div style={{
+                            marginTop: "0.5rem", paddingTop: "0.5rem",
                             borderTop: "1px solid var(--color-border)",
                         }}>
                             <p style={{
                                 fontSize: "0.55rem", fontWeight: 500, color: "var(--color-text-muted)",
                                 lineHeight: 1.5, margin: 0,
                             }}>
-                                Scores reflect the number and severity of findings. Critical issues have a higher impact on the score.
+                                Each check scores 0–100 based on finding severity. The overall score is a weighted sum. Any critical finding blocks certification.
                             </p>
                         </div>
                     </div>

@@ -6,6 +6,7 @@ import ScanPage from "./pages/ScanPage";
 import ReportPage from "./pages/ReportPage";
 import DashboardPage from "./pages/DashboardPage";
 import DemoHeroPage from "./pages/DemoHeroPage";
+import LocalScanPage from "./pages/LocalScanPage";
 
 function ProtectedRoute({ children }) {
     const { user, loading } = useAuth();
@@ -43,6 +44,7 @@ function AppLayout() {
                     }
                 />
                 <Route path="/report/:scanId" element={<ReportPage />} />
+                <Route path="/local-scan" element={<LocalScanPage />} />
                 <Route
                     path="/dashboard"
                     element={

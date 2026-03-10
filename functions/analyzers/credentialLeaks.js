@@ -25,7 +25,12 @@ const SECRET_PATTERNS = [
         severity: "critical",
     },
     {
-        name: "JWT / Bearer Token",
+        name: "JWT String",
+        regex: /eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+/,
+        severity: "critical",
+    },
+    {
+        name: "JWT / Bearer Token Assignment",
         regex: /(?:jwt|bearer)\s*[:=]\s*['"][^'"]{10,}['"]/i,
         severity: "high",
     },
@@ -100,13 +105,15 @@ function analyzeCredentialLeaks(files) {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
 
-            // Skip comments
-            const trimmed = line.trim();
-            if (trimmed.startsWith("//") || trimmed.startsWith("#") || trimmed.startsWith("*")) continue;
-
             for (const pattern of SECRET_PATTERNS) {
                 const match = line.match(pattern.regex);
                 if (!match) continue;
+
+                // Avoid false positives on environment variable key lookups
+                // e.g., process.env['VERY_LONG_ENVIRONMENT_VARIABLE_NAME']
+                if (/(?:process\.env|os\.environ)\[\s*['"][^'"]+['"]\s*\]/.test(line)) {
+                    continue;
+                }
 
                 // Check for placeholders
                 const isPlaceholder = PLACEHOLDER_VALUES.some((p) =>

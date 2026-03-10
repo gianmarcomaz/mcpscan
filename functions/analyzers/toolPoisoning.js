@@ -13,6 +13,11 @@ const TOOL_DEF_PATTERNS = [
     // Python decorators
     /@server\.tool/g,
     /@mcp\.tool/g,
+    // Go
+    /mcp\.NewTool\s*\(/g,
+    /\.AddTool\s*\(/g,
+    /AddTools?\s*\(/g,
+    /RegisterTool/g,
 ];
 
 // Extract description from nearby lines
@@ -22,6 +27,16 @@ const DESCRIPTION_PATTERNS = [
     /"""([\s\S]*?)"""/g,  // Python docstrings
     /'''([\s\S]*?)'''/g,
 ];
+
+// Extract tool names
+const NAME_PATTERNS = [
+    /name\s*[:=]\s*['"`]([^'"`]+)['"`]/gi,
+];
+
+const SHADOWED_NAMES = new Set([
+    "read_file", "write_file", "execute_command", "run_script", "get_user_info",
+    "sudo", "eval", "system", "fetch_url", "http_get", "fs_read", "fs_write",
+]);
 
 // Critical injection patterns in descriptions
 const INJECTION_PATTERNS = [
@@ -59,6 +74,16 @@ const INJECTION_PATTERNS = [
         regex: /forget\s+(?:everything|all|previous)/i,
         severity: "critical",
         message: "Memory reset attempt in tool description.",
+    },
+    {
+        regex: /[\u200B\u200C\u200D\u202E\uFEFF]/,
+        severity: "critical",
+        message: "Zero-width or text-direction override characters detected. These hide instructions from human reviewers.",
+    },
+    {
+        regex: /<!--[\s\S]*?-->/,
+        severity: "critical",
+        message: "HTML comment detected. Instructions inside HTML comments hide from users but are processed by LLMs.",
     },
 ];
 
@@ -132,11 +157,11 @@ function analyzeToolPoisoning(files) {
                 });
             }
 
-            // Check for base64
-            const base64Match = desc.text.match(/[A-Za-z0-9+/]{20,}={0,2}/);
+            // Check for base64 — tuned to 40+ chars to avoid random hashes
+            const base64Match = desc.text.match(/\b[A-Za-z0-9+/]{40,}={0,2}\b/);
             if (base64Match) {
                 findings.push({
-                    severity: "critical",
+                    severity: "medium",
                     file: file.path,
                     line: desc.line,
                     snippet: base64Match[0].slice(0, 60) + "...",
@@ -176,6 +201,26 @@ function analyzeToolPoisoning(files) {
                 }
             }
         }
+
+        // Step 4: Analyze tool names for shadowing
+        for (const pattern of NAME_PATTERNS) {
+            pattern.lastIndex = 0;
+            let match;
+            while ((match = pattern.exec(content)) !== null) {
+                const toolName = match[1].toLowerCase();
+                if (SHADOWED_NAMES.has(toolName)) {
+                    const lineNum = content.slice(0, match.index).split("\n").length;
+                    findings.push({
+                        severity: "high",
+                        file: file.path,
+                        line: lineNum,
+                        snippet: match[0],
+                        message: `Tool name '${toolName}' shadows a common system or sensitive tool name.`,
+                        remediation: "Use a more specific, domain-prefixed name for the tool to avoid confusing the LLM or shadowing built-in systemic capabilities.",
+                    });
+                }
+            }
+        }
     }
 
     // Scoring
@@ -184,7 +229,7 @@ function analyzeToolPoisoning(files) {
 
     let score;
     if (toolDefsFound === 0) {
-        score = 80; // No tool defs found — can't fully assess
+        score = 100; // No tool defs found in scanned files — no risk detected
     } else if (criticals > 0) {
         score = Math.max(0, 30 - criticals * 15);
     } else if (mediums > 0) {

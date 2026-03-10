@@ -2,6 +2,8 @@
  * Spec Compliance Analyzer
  * Validates MCP server protocol conformance.
  * Additive scoring: start at 0, add points for each passing sub-check.
+ *
+ * Supports patterns from JS/TS, Python, and Go MCP SDKs.
  */
 
 /**
@@ -17,13 +19,16 @@ function analyzeSpecCompliance(files) {
 
     // ─── CHECK 1: Server manifest/metadata (20 points) ───
     const hasServerName =
-        /server[_-]?name|name\s*[:=]\s*['"]/.test(allContent) ||
-        /createServer|McpServer|Server\s*\(/.test(allContent);
+        /server[_-]?name/i.test(allContent) ||
+        /(?:createServer|McpServer|Server|mcp\.NewServer|NewServer)\s*\(\s*\{[\s\S]{0,100}?name\s*:/i.test(allContent) ||
+        /name\s*=\s*['"][a-zA-Z0-9_-]+[-_]mcp[-_]/i.test(allContent);
     const hasVersion =
-        /version\s*[:=]\s*['"][\d.]+['"]/.test(allContent) ||
-        /"version"\s*:\s*"[\d.]+"/.test(allContent);
+        /server[_-]?version|mcp[_-]?version/i.test(allContent) ||
+        /(?:createServer|McpServer|Server|mcp\.NewServer|NewServer)\s*\(\s*\{[\s\S]{0,100}?version\s*:/i.test(allContent);
     const hasCapabilities =
-        /capabilities\s*[:=]/.test(allContent) || /setCapabilities/.test(allContent);
+        /capabilities\s*[:=]/.test(allContent) ||
+        /setCapabilities/.test(allContent) ||
+        /WithCapabilities|ServerCapabilities|Capabilities\s*\{/.test(allContent);  // Go
 
     if (hasServerName && hasVersion) {
         score += 15;
@@ -50,11 +55,62 @@ function analyzeSpecCompliance(files) {
         });
     }
 
+    const hasProtocolSupport = /@modelcontextprotocol\/sdk|mcp[_-]python|mcp[_-]sdk|github\.com\/mark3b\/mcp|mcp-go|protocolVersion/i.test(allContent);
+    if (!hasProtocolSupport) {
+        findings.push({
+            severity: "medium",
+            file: "project",
+            line: null,
+            snippet: "",
+            message: "No MCP SDK or protocol version declaration found.",
+            remediation: "Use an official MCP SDK or explicitly declare protocol compatibility.",
+        });
+    }
+
     // ─── CHECK 2: Tool definitions structure (30 points) ───
-    const hasToolDef =
-        /server\.tool\s*\(|\.addTool\s*\(|@server\.tool|@mcp\.tool|tools\s*[:=]\s*\[/.test(allContent);
+
+    // Pattern 1: Direct SDK calls (JS/TS/Python)
+    const hasDirectSDKCall =
+        /server\.tool\s*\(/.test(allContent) ||
+        /\.addTool\s*\(/.test(allContent) ||
+        /\.registerTools?\s*\(/.test(allContent) ||
+        /@server\.tool/.test(allContent) ||
+        /@mcp\.tool/.test(allContent);
+
+    // Pattern 2: Variable-then-register
+    const hasVarThenRegister =
+        /(?:const|let|var)\s+\w+\s*=\s*\{[^}]*name\s*:/.test(allContent) &&
+        /(?:addTool|registerTool|server\.tool)/.test(allContent);
+
+    // Pattern 3: Array of tools
+    const hasToolArray =
+        /tools\s*[:=]\s*\[/.test(allContent) ||
+        /(?:const|let|var)\s+tools\s*=\s*\[/.test(allContent);
+
+    // Pattern 4: Object matching MCP tool shape (name + description + inputSchema)
+    const hasToolShapeObject =
+        /name\s*[:=]\s*['"][\w-]+['"]/.test(allContent) &&
+        /description\s*[:=]\s*['"][^'"]{3,}['"]/.test(allContent) &&
+        /inputSchema|input_schema|InputSchema/.test(allContent);
+
+    // Pattern 5: Tool definition files (tools.ts, toolDefinitions.ts, etc.)
+    const hasToolDefFile = allPaths.some((p) =>
+        /[\/\\](?:tools|toolDefinitions|tool[_-]?defs|mcpTools)\.(?:ts|js|py)$/i.test(p)
+    );
+
+    // Go SDK patterns
+    const hasGoToolDef =
+        /mcp\.NewTool\s*\(/.test(allContent) ||
+        /\.AddTool\s*\(/.test(allContent) ||
+        /AddTools?\s*\(/.test(allContent) ||
+        /RegisterTool/.test(allContent);
+
+    const hasToolDef = hasDirectSDKCall || hasVarThenRegister || hasToolArray ||
+                       hasToolShapeObject || hasToolDefFile || hasGoToolDef;
+
     const hasInputSchema =
-        /inputSchema|input_schema|parameters\s*[:=]\s*\{/.test(allContent);
+        /inputSchema|input_schema|parameters\s*[:=]\s*\{/.test(allContent) ||
+        /InputSchema|mcp\.Property|WithDescription|Required\s*[:=]/.test(allContent);
     const hasSchemaType =
         /"type"\s*:\s*"object"/.test(allContent) || /type\s*[:=]\s*['"]object['"]/.test(allContent);
     const hasProperties =
@@ -62,8 +118,19 @@ function analyzeSpecCompliance(files) {
 
     if (hasToolDef) {
         score += 10;
-        if (hasInputSchema) score += 10;
-        else {
+        if (hasInputSchema) {
+            score += 10;
+            if (!hasSchemaType && !/InputSchema/.test(allContent)) {
+                findings.push({
+                    severity: "medium",
+                    file: "project",
+                    line: null,
+                    snippet: "",
+                    message: "Tool input schema lacks a top-level 'type' field.",
+                    remediation: "Ensure the root of the inputSchema is an explicitly typed 'object'.",
+                });
+            }
+        } else {
             findings.push({
                 severity: "medium",
                 file: "project",
@@ -87,13 +154,29 @@ function analyzeSpecCompliance(files) {
 
     // ─── CHECK 3: Error handling (20 points) ───
     const hasJsonRpcError =
-        /error\s*[:=]\s*\{.*code/s.test(allContent) || /JsonRpcError|McpError/.test(allContent);
-    const hasTryCatch = /try\s*\{[\s\S]*catch/m.test(allContent);
+        /error\s*[:=]\s*\{.*code/s.test(allContent) ||
+        /JsonRpcError|McpError/.test(allContent) ||
+        /fmt\.Errorf|errors\.Is|errors\.As|errors\.New/.test(allContent);  // Go
+    const hasTryCatch =
+        /try\s*\{[\s\S]*catch/m.test(allContent) ||
+        /if\s+err\s*!=\s*nil/.test(allContent);  // Go error handling
     const hasErrorHandler =
-        /\.on\s*\(\s*['"]error['"]|onerror|error_handler|catch_exceptions/.test(allContent);
+        /\.on\s*\(\s*['"]error['"]|onerror|error_handler|catch_exceptions/.test(allContent) ||
+        /ErrorHandler|HandleError/.test(allContent);  // Go
 
     if (hasTryCatch || hasErrorHandler) {
         score += 10;
+        const hasSilentErrors = /catch\s*\([^)]*\)\s*\{\s*\}|except\s+Exception[^:]*:\s*pass/.test(allContent);
+        if (hasSilentErrors) {
+            findings.push({
+                severity: "medium",
+                file: "project",
+                line: null,
+                snippet: "",
+                message: "Silent error handling detected (empty catch block).",
+                remediation: "Properly handle and return errors to the language model.",
+            });
+        }
     } else {
         findings.push({
             severity: "medium",
@@ -118,8 +201,12 @@ function analyzeSpecCompliance(files) {
     }
 
     // ─── CHECK 4: Transport implementation (15 points) ───
-    const hasStdio = /stdio|StdioServerTransport|stdin|stdout/.test(allContent);
-    const hasHttp = /SSEServerTransport|HttpServerTransport|express|fastify|http\.createServer/.test(allContent);
+    const hasStdio =
+        /stdio|StdioServerTransport|stdin|stdout/.test(allContent) ||
+        /CommandTransport|StdioTransport/.test(allContent);  // Go
+    const hasHttp =
+        /SSEServerTransport|HttpServerTransport|express|fastify|http\.createServer/.test(allContent) ||
+        /SSEHandler|StreamableHTTP|http\.ListenAndServe/.test(allContent);  // Go
 
     if (hasStdio) {
         score += 15; // stdio is inherently more secure
@@ -160,6 +247,19 @@ function analyzeSpecCompliance(files) {
             remediation: "Create a README with setup instructions, tool documentation, and usage examples.",
         });
     }
+
+    const hasEmptyToolDescriptions = /description\s*[:=]\s*['"]["']/i.test(allContent);
+    if (hasEmptyToolDescriptions) {
+        findings.push({
+            severity: "low",
+            file: "project",
+            line: null,
+            snippet: "",
+            message: "Empty tool descriptions detected.",
+            remediation: "Provide meaningful descriptions for all tools. LLMs rely on these descriptions to know when and how to use the tool.",
+        });
+    }
+
     if (hasToolDescriptions) {
         score += 5;
     }
